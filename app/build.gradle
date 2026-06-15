@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.thvjq.carboy'
+    namespace 'com.thvjq.homebrew'
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.thvjq.carboy"
+        applicationId "com.thvjq.homebrew"
         minSdk 24
         targetSdk 35
         versionCode 1

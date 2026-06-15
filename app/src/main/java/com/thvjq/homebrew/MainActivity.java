@@ -1,4 +1,4 @@
-package com.thvjq.carboy;
+package com.thvjq.homebrew;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
