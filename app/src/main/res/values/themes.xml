@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Carboy" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/copper_deep</item>
+        <item name="android:windowBackground">@color/paper</item>
+        <item name="android:statusBarColor">@color/copper_deep</item>
+        <item name="android:navigationBarColor">@color/paper</item>
+    </style>
+</resources>

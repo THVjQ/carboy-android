@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="theme-color" content="#7A3F16" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Carboy — Homebrew Recipes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237A3F16'/%3E%3Cpath d='M38 22h18a4 4 0 0 1 4 4v6l6 6v34a6 6 0 0 1-6 6H34a6 6 0 0 1-6-6V38l6-6v-6a4 4 0 0 1 4-4z' fill='%23E8B84B'/%3E%3Crect x='34' y='50' width='32' height='22' rx='3' fill='%23C77B2A'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#F2EDE2;
+    --card:#FFFFFF;
+    --ink:#241A12;
+    --ink-soft:#7a6a55;
+    --line:#E5DDCD;
+    --copper:#A8541F;
+    --copper-deep:#7A3F16;
+    --gold:#D49A23;
+    --hop:#5C7A2E;
+    --stout:#2A1C12;
+    --shadow:0 1px 2px rgba(36,26,18,.05), 0 8px 24px rgba(36,26,18,.07);
+    --radius:18px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bot:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5;overscroll-behavior-y:contain}
+  h1,h2,h3,.disp{font-family:"Bricolage Grotesque","Inter",sans-serif;font-weight:700;letter-spacing:-.01em;margin:0}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea,select{font-family:inherit;font-size:16px}
+  .app{max-width:680px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+
+  .topbar{position:sticky;top:0;z-index:30;background:var(--paper);padding:calc(var(--safe-top) + 16px) 18px 10px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .mark{width:34px;height:34px;border-radius:10px;background:var(--copper-deep);display:grid;place-items:center;flex:0 0 auto}
+  .brand .mark svg{width:21px;height:21px}
+  .brand h1{font-size:24px}
+  .brand .sub{font-size:12px;color:var(--ink-soft);font-weight:500;margin-top:1px}
+  .brand .spacer{flex:1}
+  .icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card);box-shadow:var(--shadow);color:var(--copper)}
+  .icon-btn svg{width:20px;height:20px}
+
+  .search{position:relative;margin:12px 0 4px}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-soft)}
+  .search input{width:100%;padding:13px 14px 13px 42px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none;box-shadow:var(--shadow)}
+  .search input:focus{border-color:var(--copper)}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 18px 6px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--ink-soft);white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .chip[data-on="1"]{background:var(--copper-deep);border-color:var(--copper-deep);color:#fff}
+  .chip .dot{width:8px;height:8px;border-radius:50%}
+  .chip.fav[data-on="1"]{background:var(--copper);border-color:var(--copper)}
+
+  .scroll{flex:1;padding:6px 18px calc(110px + var(--safe-bot))}
+  .count{font-size:12px;color:var(--ink-soft);font-weight:600;margin:10px 2px 12px;text-transform:uppercase;letter-spacing:.06em}
+  .grid{display:flex;flex-direction:column;gap:14px}
+  .rcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;min-height:104px;position:relative;border:1px solid var(--line);transition:transform .12s ease}
+  .rcard:active{transform:scale(.985)}
+  .rcard .thumb{width:104px;flex:0 0 auto;background:var(--paper) center/cover no-repeat;position:relative}
+  .rcard .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--line)}
+  .rcard .thumb .ph svg{width:34px;height:34px}
+  .rcard .body{padding:14px 14px 12px;flex:1;min-width:0;display:flex;flex-direction:column}
+  .rcard .tab{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;align-self:flex-start;padding:3px 9px;border-radius:999px;color:#fff;margin-bottom:6px}
+  .rcard h3{font-size:18px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .rcard .meta{margin-top:auto;display:flex;gap:14px;font-size:12.5px;color:var(--ink-soft);padding-top:8px;flex-wrap:wrap}
+  .rcard .meta span{display:flex;align-items:center;gap:5px}
+  .rcard .meta svg{width:13px;height:13px}
+  .rcard .heart{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.85);display:grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .rcard .heart svg{width:16px;height:16px;color:var(--ink-soft)}
+  .rcard .heart[data-fav="1"] svg{color:var(--copper);fill:var(--copper)}
+
+  .empty{text-align:center;padding:48px 24px;color:var(--ink-soft)}
+  .empty .ill{width:84px;height:84px;border-radius:24px;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;margin:0 auto 18px;color:var(--copper)}
+  .empty .ill svg{width:40px;height:40px}
+  .empty h2{font-size:21px;color:var(--ink);margin-bottom:6px}
+  .empty p{font-size:14px;max-width:280px;margin:0 auto}
+
+  .fab{position:fixed;left:50%;bottom:calc(22px + var(--safe-bot));transform:translateX(-50%);background:var(--copper-deep);color:#fff;border-radius:999px;padding:15px 22px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;box-shadow:0 6px 20px rgba(122,63,22,.34);z-index:40}
+  .fab svg{width:19px;height:19px}
+  .fab:active{transform:translateX(-50%) scale(.96)}
+
+  .view{position:fixed;inset:0;background:var(--paper);z-index:50;display:none;flex-direction:column;overflow:hidden}
+  .view.open{display:flex;animation:slideup .26s cubic-bezier(.2,.8,.2,1)}
+  @keyframes slideup{from{transform:translateY(14px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  .vbar{display:flex;align-items:center;gap:8px;padding:calc(var(--safe-top) + 14px) 16px 12px;position:sticky;top:0;z-index:5}
+  .vbar.float{position:absolute;left:0;right:0;background:linear-gradient(to bottom,rgba(0,0,0,.34),transparent)}
+  .vbar .back,.vbar .vbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card);box-shadow:var(--shadow);color:var(--ink)}
+  .vbar.float .back,.vbar.float .vbtn{background:rgba(255,255,255,.92)}
+  .vbar .vtitle{flex:1;font-weight:700;font-size:16px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vbar svg{width:20px;height:20px}
+  .vscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+  .hero{height:220px;background:var(--stout) center/cover no-repeat;position:relative}
+  .hero .ph{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.16);background:var(--stout)}
+  .hero .ph svg{width:64px;height:64px}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(20,14,8,.55),transparent 46%)}
+  .detail{padding:18px 20px calc(40px + var(--safe-bot));max-width:680px;margin:0 auto;width:100%}
+  .detail .tab{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 11px;border-radius:999px;color:#fff;margin-bottom:10px}
+  .detail h1{font-size:28px;line-height:1.12;margin-bottom:16px}
+
+  /* Scaler — signature element */
+  .scaler{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:16px;margin-bottom:20px}
+  .scaler .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .scaler .lab{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);font-weight:700}
+  .scaler .fac{font-family:"Bricolage Grotesque";font-weight:700;font-size:14px;color:#fff;background:var(--hop);padding:3px 10px;border-radius:999px}
+  .scaler .fac[data-x="1"]{background:var(--line);color:var(--ink-soft)}
+  .scaler .ctl{display:flex;align-items:center;justify-content:center;gap:16px}
+  .scaler .ctl button{width:44px;height:44px;border-radius:14px;background:var(--paper);color:var(--copper-deep);font-size:24px;display:grid;place-items:center;font-weight:600;border:1px solid var(--line)}
+  .scaler .ctl button:active{background:var(--line)}
+  .scaler .vol{text-align:center;min-width:120px}
+  .scaler .vol .num{font-family:"Bricolage Grotesque";font-weight:700;font-size:30px;line-height:1}
+  .scaler .vol .conv{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .scaler .presets{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .scaler .presets button{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+  .scaler .presets button[data-on="1"]{background:var(--copper-deep);border-color:var(--copper-deep);color:#fff}
+  .scaler .note{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:11px;line-height:1.4}
+
+  .statgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px}
+  .statgrid.four{grid-template-columns:repeat(4,1fr)}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 6px;text-align:center;box-shadow:var(--shadow)}
+  .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700}
+  .stat .v{font-family:"Bricolage Grotesque";font-weight:700;font-size:16px;margin-top:3px}
+
+  .sec{margin-bottom:24px}
+  .sec h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--copper);margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .sec h2 .pill{font-size:10px;background:var(--paper);color:var(--ink-soft);padding:2px 8px;border-radius:999px;letter-spacing:.02em}
+  .ing-list{list-style:none;padding:0;margin:0}
+  .ing-list li{display:flex;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);font-size:15.5px}
+  .ing-list li:last-child{border-bottom:none}
+  .ing-list li .b{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:9px;flex:0 0 auto}
+  .ing-list.hops li .b{background:var(--hop)}
+  .steps{list-style:none;padding:0;margin:0;counter-reset:s}
+  .steps li{display:flex;gap:14px;padding:0 0 18px}
+  .steps li .n{counter-increment:s;flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--copper-deep);color:#fff;font-family:"Bricolage Grotesque";font-weight:700;display:grid;place-items:center;font-size:14px}
+  .steps li .n::before{content:counter(s)}
+  .steps li .t{padding-top:4px;font-size:15.5px}
+  .notes{background:#FBF3DF;border:1px solid #F0E2B8;border-radius:14px;padding:14px 16px;font-size:14.5px;color:#6b561f;white-space:pre-wrap}
+  .cookbtn{position:sticky;bottom:0;background:linear-gradient(to top,var(--paper) 62%,transparent);padding:14px 0 calc(16px + var(--safe-bot))}
+  .cookbtn button{width:100%;background:var(--copper);color:#fff;font-weight:700;font-size:16px;padding:16px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 18px rgba(168,84,31,.32)}
+  .cookbtn button svg{width:20px;height:20px}
+
+  .form{padding:8px 20px calc(40px + var(--safe-bot));max-width:680px;margin:0 auto;width:100%}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em}
+  .field input,.field textarea,.field select{width:100%;padding:13px 14px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--copper)}
+  .field textarea{resize:vertical;min-height:104px;line-height:1.55}
+  .field .hint{font-size:12px;color:var(--ink-soft);margin-top:6px}
+  .rowflex{display:flex;gap:10px}
+  .rowflex .field{flex:1}
+  .batchrow{display:flex;gap:10px;align-items:flex-end}
+  .batchrow .field{flex:1}
+  .batchrow .unit{flex:0 0 92px}
+  .statrow{display:flex;gap:8px}
+  .statrow .field{flex:1}
+  .statrow .field input{padding:11px 8px;text-align:center}
+  .catpick{display:flex;gap:8px;flex-wrap:wrap}
+  .catpick button{padding:9px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+  .catpick button .dot{width:9px;height:9px;border-radius:50%}
+  .catpick button[data-on="1"]{color:#fff}
+  .photo-field{display:flex;gap:12px;align-items:center}
+  .photo-prev{width:74px;height:74px;border-radius:14px;background:var(--paper) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;color:var(--ink-soft);flex:0 0 auto}
+  .photo-prev svg{width:26px;height:26px}
+  .ghost{padding:11px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:14px;color:var(--ink)}
+  .savebar{position:sticky;bottom:0;background:linear-gradient(to top,var(--paper) 60%,transparent);padding:14px 20px calc(16px + var(--safe-bot));display:flex;gap:10px;max-width:680px;margin:0 auto;width:100%}
+  .savebar .del{flex:0 0 auto;width:52px;border-radius:14px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;color:var(--copper)}
+  .savebar .del svg{width:20px;height:20px}
+  .savebar .save{flex:1;background:var(--copper-deep);color:#fff;font-weight:700;font-size:16px;padding:16px;border-radius:14px}
+
+  #cook{background:var(--stout);color:#fff}
+  #cook .vbar .back,#cook .vbar .vbtn{background:rgba(255,255,255,.14);color:#fff;box-shadow:none}
+  #cook .vtitle{color:#fff}
+  .cookwrap{padding:6px 22px calc(40px + var(--safe-bot));max-width:680px;margin:0 auto;width:100%}
+  .cookbatch{text-align:center;background:rgba(255,255,255,.08);border-radius:16px;padding:14px;margin:6px 0 24px}
+  .cookbatch .num{font-family:"Bricolage Grotesque";font-weight:700;font-size:26px}
+  .cookbatch .lab{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.6);font-weight:600;margin-top:2px}
+  #cook h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin:0 0 14px;font-weight:700}
+  .cook-ing{list-style:none;padding:0;margin:0 0 30px}
+  .cook-ing li{padding:14px 4px;border-bottom:1px solid rgba(255,255,255,.12);font-size:17px;display:flex;gap:14px;align-items:flex-start}
+  .cook-ing li .ck{width:24px;height:24px;border-radius:7px;border:2px solid rgba(255,255,255,.4);flex:0 0 auto;margin-top:1px;display:grid;place-items:center}
+  .cook-ing li .ck svg{width:15px;height:15px;color:var(--stout);opacity:0}
+  .cook-ing li[data-done="1"] .ck{background:var(--gold);border-color:var(--gold)}
+  .cook-ing li[data-done="1"] .ck svg{opacity:1}
+  .cook-ing li[data-done="1"] .tx{opacity:.45;text-decoration:line-through}
+  .cook-step{background:rgba(255,255,255,.07);border-radius:18px;padding:20px;margin-bottom:14px;display:flex;gap:16px;align-items:flex-start}
+  .cook-step .n{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--stout);font-family:"Bricolage Grotesque";font-weight:700;display:grid;place-items:center;font-size:16px}
+  .cook-step .tx{font-size:18px;line-height:1.55;padding-top:3px}
+  .cook-step[data-done="1"]{opacity:.5}
+  .cook-step[data-done="1"] .tx{text-decoration:line-through}
+  .cook-step[data-done="1"] .n{background:rgba(255,255,255,.25);color:#fff}
+
+  .backdrop{position:fixed;inset:0;background:rgba(20,14,8,.44);z-index:60;display:none;animation:fade .2s}
+  .backdrop.open{display:block}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .menu{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--paper);border-radius:24px 24px 0 0;padding:10px 16px calc(20px + var(--safe-bot));max-width:680px;margin:0 auto;transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+  .menu.open{transform:translateY(0)}
+  .menu .grip{width:40px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 14px}
+  .menu h3{font-size:18px;margin:0 4px 4px}
+  .menu .msub{font-size:13px;color:var(--ink-soft);margin:0 4px 14px}
+  .menu .mitem{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-bottom:10px;font-weight:600;font-size:15px}
+  .menu .mitem svg{width:20px;height:20px;color:var(--copper);flex:0 0 auto}
+  .menu .mitem small{display:block;font-weight:400;color:var(--ink-soft);font-size:12.5px;margin-top:1px}
+
+  .toast{position:fixed;left:50%;bottom:calc(96px + var(--safe-bot));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:500;z-index:80;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M38 22h18a4 4 0 0 1 4 4v6l6 6v34a6 6 0 0 1-6 6H34a6 6 0 0 1-6-6V38l6-6v-6a4 4 0 0 1 4-4z" fill="#E8B84B"/><rect x="34" y="50" width="32" height="22" rx="3" fill="#C77B2A"/></svg>
+      </div>
+      <div>
+        <h1>Carboy</h1>
+        <div class="sub" id="sub">Your homebrew recipes</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="menuBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3" stroke-linecap="round"/></svg>
+      <input id="search" type="search" placeholder="Search recipes, malts or hops" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="scroll">
+    <div class="count" id="count"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<button class="fab" id="addBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  New brew
+</button>
+
+<!-- DETAIL -->
+<div class="view" id="detail">
+  <div class="vbar float">
+    <button class="back" data-close="detail" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div style="flex:1"></div>
+    <button class="vbtn" id="dFav" aria-label="Favorite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.3-9C1 8.6 2.7 5.5 6 5.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.5C19 16.4 12 21 12 21z"/></svg></button>
+    <button class="vbtn" id="dEdit" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+  </div>
+  <div class="vscroll" id="detailScroll"></div>
+</div>
+
+<!-- FORM -->
+<div class="view" id="form">
+  <div class="vbar">
+    <button class="back" data-close="form" aria-label="Cancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="vtitle" id="formTitle">New brew</div>
+    <div style="width:40px"></div>
+  </div>
+  <div class="vscroll">
+    <div class="form">
+      <div class="field">
+        <label>Recipe name</label>
+        <input id="fName" placeholder="e.g. Hazy Session IPA" />
+      </div>
+      <div class="field">
+        <label>Style</label>
+        <div class="catpick" id="fCat"></div>
+      </div>
+      <div class="batchrow">
+        <div class="field" style="margin-bottom:16px"><label>Batch size</label><input id="fBatch" type="number" min="1" step="0.5" inputmode="decimal" placeholder="20" /></div>
+        <div class="field unit" style="margin-bottom:16px"><label>Unit</label>
+          <select id="fUnit"><option value="L">litres</option><option value="gal">gallons</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Photo (optional)</label>
+        <div class="photo-field">
+          <div class="photo-prev" id="fPhotoPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5-9 7" stroke-linecap="round"/></svg></div>
+          <div>
+            <button class="ghost" id="fPhotoBtn">Add photo</button>
+            <button class="ghost" id="fPhotoClear" style="display:none;margin-left:8px;color:var(--copper)">Remove</button>
+            <input id="fPhoto" type="file" accept="image/*" style="display:none" />
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Target stats (optional)</label></div>
+      <div class="statrow">
+        <div class="field"><input id="fOG" placeholder="OG" /></div>
+        <div class="field"><input id="fFG" placeholder="FG" /></div>
+        <div class="field"><input id="fABV" placeholder="ABV%" /></div>
+        <div class="field"><input id="fIBU" placeholder="IBU" /></div>
+        <div class="field"><input id="fSRM" placeholder="Color" /></div>
+      </div>
+      <div class="field">
+        <label>Fermentables — grain &amp; extract</label>
+        <textarea id="fFerm" placeholder="One per line, e.g.&#10;5 kg Pale 2-row malt&#10;0.5 kg Munich malt&#10;0.3 kg Crystal 40L"></textarea>
+        <div class="hint">Quantities at the start of each line scale with batch size.</div>
+      </div>
+      <div class="field">
+        <label>Hops</label>
+        <textarea id="fHops" placeholder="One per line, e.g.&#10;30 g Columbus @ 60 min&#10;60 g Citra @ 5 min&#10;60 g Citra dry hop"></textarea>
+      </div>
+      <div class="field">
+        <label>Yeast</label>
+        <textarea id="fYeast" style="min-height:70px" placeholder="e.g.&#10;1 pkt US-05 American Ale"></textarea>
+      </div>
+      <div class="field">
+        <label>Other — water, finings, adjuncts (optional)</label>
+        <textarea id="fMisc" style="min-height:70px" placeholder="e.g.&#10;5 g Gypsum&#10;1 tsp Irish moss @ 15 min"></textarea>
+      </div>
+      <div class="field">
+        <label>Brew day steps</label>
+        <textarea id="fSteps" placeholder="One step per line, e.g.&#10;Mash at 66°C for 60 min&#10;Sparge and collect ~25 L&#10;Boil 60 min, add hops on schedule&#10;Chill to 20°C and pitch yeast"></textarea>
+      </div>
+      <div class="field">
+        <label>Fermentation &amp; packaging (optional)</label>
+        <textarea id="fFerment" style="min-height:80px" placeholder="e.g.&#10;Ferment at 19°C for 14 days&#10;Dry hop day 7 for 3 days&#10;Cold crash, then keg"></textarea>
+      </div>
+      <div class="field">
+        <label>Notes (optional)</label>
+        <textarea id="fNotes" style="min-height:70px" placeholder="Tasting notes, tweaks for next time…"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="savebar">
+    <button class="del" id="fDelete" style="display:none" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+    <button class="save" id="fSave">Save recipe</button>
+  </div>
+</div>
+
+<!-- BREW DAY -->
+<div class="view" id="cook">
+  <div class="vbar">
+    <button class="back" data-close="cook" aria-label="Done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div class="vtitle" id="cookTitle">Brew day</div>
+    <div style="width:40px"></div>
+  </div>
+  <div class="vscroll">
+    <div class="cookwrap" id="cookWrap"></div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="backdrop" id="backdrop"></div>
+<div class="menu" id="menu">
+  <div class="grip"></div>
+  <h3>Your brew log</h3>
+  <p class="msub" id="menuStats"></p>
+  <button class="mitem" id="exportBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+    <span>Back up recipes<small>Save all recipes to a file</small></span>
+  </button>
+  <button class="mitem" id="importBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 9l5-5 5 5"/><path d="M12 4v12"/></svg>
+    <span>Restore from backup<small>Load recipes from a file</small></span>
+  </button>
+  <input id="importFile" type="file" accept="application/json,.json" style="display:none" />
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "carboy.recipes.v1";
+  var CATS = [
+    {id:"pale",   name:"Pale Ale",        color:"#D49A23"},
+    {id:"ipa",    name:"IPA",             color:"#C77B2A"},
+    {id:"lager",  name:"Lager",           color:"#E0B83A"},
+    {id:"stout",  name:"Stout & Porter",  color:"#3A2A1E"},
+    {id:"wheat",  name:"Wheat",           color:"#CDB45A"},
+    {id:"sour",   name:"Sour",            color:"#C2557E"},
+    {id:"cider",  name:"Cider",           color:"#9AA63A"},
+    {id:"mead",   name:"Mead",            color:"#C9962B"},
+    {id:"other",  name:"Other",           color:"#7a6a55"}
+  ];
+  function cat(id){ for(var i=0;i<CATS.length;i++){ if(CATS[i].id===id) return CATS[i]; } return CATS[CATS.length-1]; }
+
+  function load(){ try{ var raw=localStorage.getItem(KEY); if(raw) return JSON.parse(raw); }catch(e){} return null; }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state.recipes)); }catch(e){ toast("Couldn't save — storage may be full"); } }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+  function seed(){
+    return [
+      {id:uid(), name:"West Coast IPA", category:"ipa", batch:20, unit:"L", fav:true, photo:"",
+        og:"1.062", fg:"1.012", abv:"6.6%", ibu:"60", srm:"7",
+        fermentables:["5 kg Pale 2-row malt","0.5 kg Munich malt","0.3 kg Crystal 40L"],
+        hops:["30 g Columbus @ 60 min","30 g Centennial @ 15 min","60 g Citra @ 5 min","60 g Citra dry hop, 3 days"],
+        yeast:["1 pkt US-05 American Ale"],
+        misc:["5 g Gypsum in mash","1 tsp Irish moss @ 15 min"],
+        steps:["Mash grains at 66°C for 60 min","Sparge and collect ~25 L of wort","Boil 60 min, adding hops on schedule","Chill to 20°C as fast as you can","Pitch yeast and seal the fermenter"],
+        ferment:["Ferment at 19°C for 14 days","Dry hop on day 10 for 3 days","Cold crash, then keg or bottle"],
+        notes:"Bright, resiny and citrus-forward. Don't skimp on the chill — fast cooling keeps it clear."},
+      {id:uid(), name:"Dry Irish Stout", category:"stout", batch:20, unit:"L", fav:false, photo:"",
+        og:"1.044", fg:"1.011", abv:"4.3%", ibu:"40", srm:"35",
+        fermentables:["3.5 kg Pale malt","0.5 kg Flaked barley","0.4 kg Roasted barley"],
+        hops:["45 g East Kent Goldings @ 60 min"],
+        yeast:["1 pkt Irish Ale yeast"],
+        misc:["1 tsp Irish moss @ 15 min"],
+        steps:["Mash at 67°C for 60 min","Sparge and collect ~25 L","Boil 60 min with the single hop addition","Chill to 18°C and pitch"],
+        ferment:["Ferment at 18°C for 10 days","Package and serve on nitro if you can"],
+        notes:"Roasty and dry. Serve cool, not cold, to taste the coffee notes."},
+      {id:uid(), name:"Classic Hefeweizen", category:"wheat", batch:20, unit:"L", fav:true, photo:"",
+        og:"1.050", fg:"1.011", abv:"5.1%", ibu:"14", srm:"4",
+        fermentables:["2.6 kg Wheat malt","2.4 kg Pilsner malt"],
+        hops:["25 g Hallertau @ 60 min"],
+        yeast:["1 pkt Weihenstephan wheat yeast"],
+        misc:[],
+        steps:["Mash at 65°C for 60 min","Sparge and collect ~25 L","Boil 60 min with a single bittering addition","Chill to 18°C and pitch"],
+        ferment:["Ferment warm at 20°C for banana & clove character","Package after ~12 days — no need to clear"],
+        notes:"Pitch a touch warm to bring out the classic banana and clove esters."}
+    ];
+  }
+
+  var state = { recipes: load() || seed(), filter:"all", favOnly:false, q:"", current:null, workBatch:null };
+  if(!load()) save();
+
+  var $ = function(s){ return document.querySelector(s); };
+  var toastT;
+  function toast(msg){ var t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove("show"); },2200); }
+  function esc(s){ return (s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function find(id){ for(var i=0;i<state.recipes.length;i++){ if(state.recipes[i].id===id) return state.recipes[i]; } return null; }
+
+  // --- scaling ---
+  function scaleLine(line, mult){
+    if(mult===1) return line;
+    return line.replace(/^(\s*)(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)/, function(_, sp, num){
+      var val;
+      if(num.indexOf(" ")>-1){ var pp=num.split(/\s+/); var fr=pp[1].split("/"); val=parseFloat(pp[0])+(+fr[0]/+fr[1]); }
+      else if(num.indexOf("/")>-1){ var f=num.split("/"); val=(+f[0])/(+f[1]); }
+      else val=parseFloat(num);
+      var r=val*mult, out=Math.round(r*100)/100;
+      return sp + (out % 1 === 0 ? out : out.toFixed(2).replace(/\.?0+$/,""));
+    });
+  }
+  function scaleArr(arr, mult){ return (arr||[]).map(function(x){ return scaleLine(x, mult); }); }
+  function factor(r){ var b=r.batch||1; return b>0 ? (state.workBatch/b) : 1; }
+  function volConv(v, unit){ if(unit==="L") return (v/3.785).toFixed(1)+" gal"; return (v*3.785).toFixed(1)+" L"; }
+  function fmtVol(v){ return (Math.round(v*100)/100).toString().replace(/\.0+$/,""); }
+
+  // --- list ---
+  function renderChips(){
+    var c=$("#chips"), html="";
+    html+='<button class="chip" data-cat="all" data-on="'+(state.filter==="all"&&!state.favOnly?1:0)+'">All</button>';
+    html+='<button class="chip fav" data-fav="1" data-on="'+(state.favOnly?1:0)+'">♥ Favorites</button>';
+    for(var i=0;i<CATS.length;i++){
+      if(!state.recipes.some(function(r){return r.category===CATS[i].id;})) continue;
+      html+='<button class="chip" data-cat="'+CATS[i].id+'" data-on="'+(state.filter===CATS[i].id&&!state.favOnly?1:0)+'"><span class="dot" style="background:'+CATS[i].color+'"></span>'+CATS[i].name+'</button>';
+    }
+    c.innerHTML=html;
+  }
+  function visible(){
+    var q=state.q.trim().toLowerCase();
+    return state.recipes.filter(function(r){
+      if(state.favOnly && !r.fav) return false;
+      if(!state.favOnly && state.filter!=="all" && r.category!==state.filter) return false;
+      if(q){
+        var hay=(r.name+" "+(r.fermentables||[]).join(" ")+" "+(r.hops||[]).join(" ")+" "+(r.notes||"")).toLowerCase();
+        if(hay.indexOf(q)<0) return false;
+      }
+      return true;
+    }).sort(function(a,b){ return a.name.localeCompare(b.name); });
+  }
+  function renderList(){
+    renderChips();
+    var list=visible(), g=$("#grid"), cnt=$("#count");
+    if(state.recipes.length===0){
+      cnt.textContent="";
+      g.innerHTML='<div class="empty"><div class="ill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l1 4 3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9l3-3z" stroke-linejoin="round"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg></div><h2>Start your brew log</h2><p>Add your homebrew recipes and they\'ll live right here on your phone.</p></div>';
+      return;
+    }
+    if(list.length===0){
+      cnt.textContent="";
+      g.innerHTML='<div class="empty"><div class="ill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3" stroke-linecap="round"/></svg></div><h2>Nothing here yet</h2><p>No brews match. Try another search or filter.</p></div>';
+      return;
+    }
+    cnt.textContent=list.length+(list.length===1?" recipe":" recipes");
+    var html="";
+    for(var i=0;i<list.length;i++){
+      var r=list[i], ct=cat(r.category), thumb=r.photo?'style="background-image:url('+r.photo+')"':'';
+      html+='<div class="rcard" data-open="'+r.id+'">'+
+        '<div class="thumb" '+thumb+'>'+(r.photo?'':'<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 3h6l1 4 3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9l3-3z" stroke-linejoin="round"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg></div>')+'</div>'+
+        '<div class="body">'+
+          '<span class="tab" style="background:'+ct.color+'">'+ct.name+'</span>'+
+          '<h3>'+esc(r.name)+'</h3>'+
+          '<div class="meta">'+
+            '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h10l-1 5 2 2v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9l2-2z" stroke-linejoin="round"/></svg>'+fmtVol(r.batch||0)+' '+(r.unit||"L")+'</span>'+
+            (r.abv?'<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s5 6 5 10a5 5 0 0 1-10 0c0-4 5-10 5-10z"/></svg>'+esc(r.abv)+'</span>':'')+
+            (r.ibu?'<span>'+esc(r.ibu)+' IBU</span>':'')+
+          '</div>'+
+        '</div>'+
+        '<button class="heart" data-fav-toggle="'+r.id+'" data-fav="'+(r.fav?1:0)+'" aria-label="Favorite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.3-9C1 8.6 2.7 5.5 6 5.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.5C19 16.4 12 21 12 21z"/></svg></button>'+
+      '</div>';
+    }
+    g.innerHTML=html;
+  }
+
+  // --- detail ---
+  function statBlock(r){
+    var items=[["OG",r.og],["FG",r.fg],["ABV",r.abv],["IBU",r.ibu],["Color",r.srm]].filter(function(x){return x[1];});
+    if(!items.length) return "";
+    var cls = items.length===4 ? "statgrid four" : "statgrid";
+    if(items.length<4) cls="statgrid";
+    var inner=items.map(function(x){ return '<div class="stat"><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>'; }).join("");
+    return '<div class="statgrid" style="grid-template-columns:repeat('+items.length+',1fr)">'+inner+'</div>';
+  }
+  function detailBody(){
+    var r=find(state.current); if(!r) return;
+    var ct=cat(r.category), mult=factor(r), x=Math.round(mult*100)/100;
+    var sec=function(title, arr, cls){
+      var s=scaleArr(arr, mult);
+      if(!s.length) return "";
+      var pill = (mult!==1) ? '<span class="pill">scaled ×'+x+'</span>' : '';
+      return '<div class="sec"><h2>'+title+pill+'</h2><ul class="ing-list '+(cls||'')+'">'+s.map(function(v){return '<li><span class="b"></span><span>'+esc(v)+'</span></li>';}).join("")+'</ul></div>';
+    };
+    var steps=(r.steps||[]).map(function(v){return '<li><span class="n"></span><span class="t">'+esc(v)+'</span></li>';}).join("");
+    var ferment=(r.ferment||[]).map(function(v){return '<li><span class="b" style="background:var(--copper)"></span><span>'+esc(v)+'</span></li>';}).join("");
+    var heroStyle=r.photo?'style="background-image:url('+r.photo+')"':'';
+    $("#detailScroll").innerHTML=''+
+      '<div class="hero" '+heroStyle+'>'+(r.photo?'':'<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M9 3h6l1 4 3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9l3-3z" stroke-linejoin="round"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg></div>')+'</div>'+
+      '<div class="detail">'+
+        '<span class="tab" style="background:'+ct.color+'">'+ct.name+'</span>'+
+        '<h1>'+esc(r.name)+'</h1>'+
+        '<div class="scaler">'+
+          '<div class="top"><span class="lab">Batch size</span><span class="fac" data-x="'+(mult===1?1:0)+'">×'+x+'</span></div>'+
+          '<div class="ctl">'+
+            '<button id="batMinus" aria-label="Smaller">−</button>'+
+            '<div class="vol"><div class="num">'+fmtVol(state.workBatch)+' '+(r.unit||"L")+'</div><div class="conv">≈ '+volConv(state.workBatch, r.unit||"L")+'</div></div>'+
+            '<button id="batPlus" aria-label="Larger">+</button>'+
+          '</div>'+
+          '<div class="presets" id="batPresets"></div>'+
+          '<div class="note">Ingredient amounts scale with batch size. Gravity, ABV and IBU targets stay the same.</div>'+
+        '</div>'+
+        statBlock(r)+
+        sec("Fermentables", r.fermentables)+
+        sec("Hops", r.hops, "hops")+
+        sec("Yeast", r.yeast)+
+        sec("Other", r.misc)+
+        (steps?'<div class="sec"><h2>Brew day</h2><ol class="steps">'+steps+'</ol></div>':'')+
+        (ferment?'<div class="sec"><h2>Fermentation &amp; packaging</h2><ul class="ing-list">'+ferment+'</ul></div>':'')+
+        (r.notes?'<div class="sec"><h2>Notes</h2><div class="notes">'+esc(r.notes)+'</div></div>':'')+
+        '<div class="cookbtn"><button id="startCook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 4 3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9l3-3z"/></svg>Start brew day</button></div>'+
+      '</div>';
+    renderPresets(r);
+    $("#startCook").onclick=function(){ openCook(); };
+  }
+  function renderPresets(r){
+    var unit=r.unit||"L";
+    var presets = unit==="gal" ? [1,3,5,10] : [10,19,20,23,40];
+    if(presets.indexOf(r.batch)<0){ presets.push(r.batch); presets.sort(function(a,b){return a-b;}); }
+    $("#batPresets").innerHTML = presets.map(function(p){
+      return '<button data-preset="'+p+'" data-on="'+(state.workBatch===p?1:0)+'">'+fmtVol(p)+' '+unit+'</button>';
+    }).join("");
+  }
+  function setWork(v, r){
+    v=Math.round(v*2)/2;
+    if(v<1) v=1; if(v>500) v=500;
+    state.workBatch=v;
+    detailBody();
+  }
+  function openDetail(id){
+    var r=find(id); if(!r) return;
+    state.current=id; state.workBatch=r.batch||20;
+    detailBody(); setFavIcon();
+    $("#detailScroll").scrollTop=0;
+    show("detail");
+  }
+  function setFavIcon(){
+    var r=find(state.current); if(!r) return;
+    var svg=$("#dFav").querySelector("svg");
+    if(r.fav){ svg.setAttribute("fill","#A8541F"); svg.setAttribute("stroke","#A8541F"); }
+    else { svg.setAttribute("fill","none"); svg.setAttribute("stroke","currentColor"); }
+  }
+
+  // --- brew day ---
+  function openCook(){
+    var r=find(state.current); if(!r) return;
+    var mult=factor(r);
+    $("#cookTitle").textContent=r.name;
+    var prep=[].concat(scaleArr(r.fermentables,mult), scaleArr(r.hops,mult), scaleArr(r.yeast,mult), scaleArr(r.misc,mult));
+    var ing=prep.map(function(x,i){ return '<li data-ing="'+i+'"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span class="tx">'+esc(x)+'</span></li>'; }).join("");
+    var steps=(r.steps||[]).concat(r.ferment||[]).map(function(x,i){ return '<div class="cook-step" data-step="'+i+'"><span class="n">'+(i+1)+'</span><span class="tx">'+esc(x)+'</span></div>'; }).join("");
+    $("#cookWrap").innerHTML=
+      '<div class="cookbatch"><div class="num">'+fmtVol(state.workBatch)+' '+(r.unit||"L")+'</div><div class="lab">batch'+(mult!==1?' · scaled ×'+(Math.round(mult*100)/100):'')+'</div></div>'+
+      (ing?'<h2>Prepare &amp; weigh — tap to check off</h2><ul class="cook-ing">'+ing+'</ul>':'')+
+      (steps?'<h2>Steps — tap when done</h2>'+steps:'');
+    show("cook");
+  }
+
+  // --- form ---
+  var editingId=null, formPhoto="";
+  function renderCatPicker(selected){
+    var html="";
+    for(var i=0;i<CATS.length;i++){
+      var on=CATS[i].id===selected;
+      html+='<button type="button" data-pick="'+CATS[i].id+'" data-on="'+(on?1:0)+'" style="'+(on?'background:'+CATS[i].color+';border-color:'+CATS[i].color:'')+'"><span class="dot" style="background:'+CATS[i].color+'"></span>'+CATS[i].name+'</button>';
+    }
+    $("#fCat").innerHTML=html; $("#fCat").dataset.val=selected;
+  }
+  function openForm(id){
+    editingId=id||null; formPhoto="";
+    var g=function(sel){return $(sel);};
+    if(id){
+      var r=find(id);
+      $("#formTitle").textContent="Edit recipe";
+      g("#fName").value=r.name||""; g("#fBatch").value=r.batch||""; g("#fUnit").value=r.unit||"L";
+      g("#fOG").value=r.og||""; g("#fFG").value=r.fg||""; g("#fABV").value=r.abv||""; g("#fIBU").value=r.ibu||""; g("#fSRM").value=r.srm||"";
+      g("#fFerm").value=(r.fermentables||[]).join("\n");
+      g("#fHops").value=(r.hops||[]).join("\n");
+      g("#fYeast").value=(r.yeast||[]).join("\n");
+      g("#fMisc").value=(r.misc||[]).join("\n");
+      g("#fSteps").value=(r.steps||[]).join("\n");
+      g("#fFerment").value=(r.ferment||[]).join("\n");
+      g("#fNotes").value=r.notes||"";
+      formPhoto=r.photo||"";
+      renderCatPicker(r.category||"pale");
+      $("#fDelete").style.display="grid";
+    } else {
+      $("#formTitle").textContent="New brew";
+      ["#fName","#fBatch","#fOG","#fFG","#fABV","#fIBU","#fSRM","#fFerm","#fHops","#fYeast","#fMisc","#fSteps","#fFerment","#fNotes"].forEach(function(s){g(s).value="";});
+      g("#fUnit").value="L"; g("#fBatch").value="20";
+      renderCatPicker("pale");
+      $("#fDelete").style.display="none";
+    }
+    updatePhotoPrev(); show("form"); $("#form .vscroll").scrollTop=0;
+  }
+  function updatePhotoPrev(){
+    var p=$("#fPhotoPrev");
+    if(formPhoto){ p.style.backgroundImage="url("+formPhoto+")"; p.innerHTML=""; $("#fPhotoClear").style.display="inline-block"; $("#fPhotoBtn").textContent="Change photo"; }
+    else { p.style.backgroundImage=""; p.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5-9 7" stroke-linecap="round"/></svg>'; $("#fPhotoClear").style.display="none"; $("#fPhotoBtn").textContent="Add photo"; }
+  }
+  function lines(v){ return v.split("\n").map(function(x){return x.trim();}).filter(Boolean); }
+  function saveForm(){
+    var name=$("#fName").value.trim();
+    if(!name){ toast("Give your brew a name"); $("#fName").focus(); return; }
+    var data={
+      name:name, category:$("#fCat").dataset.val||"other",
+      batch:parseFloat($("#fBatch").value)||20, unit:$("#fUnit").value||"L",
+      og:$("#fOG").value.trim(), fg:$("#fFG").value.trim(), abv:$("#fABV").value.trim(), ibu:$("#fIBU").value.trim(), srm:$("#fSRM").value.trim(),
+      fermentables:lines($("#fFerm").value), hops:lines($("#fHops").value), yeast:lines($("#fYeast").value),
+      misc:lines($("#fMisc").value), steps:lines($("#fSteps").value), ferment:lines($("#fFerment").value),
+      notes:$("#fNotes").value.trim(), photo:formPhoto
+    };
+    if(editingId){ var r=find(editingId); for(var k in data) r[k]=data[k]; toast("Recipe updated"); }
+    else { data.id=uid(); data.fav=false; state.recipes.push(data); toast("Brew added"); }
+    save(); renderList();
+    if(editingId){ hide("form"); openDetail(editingId); } else { hide("form"); }
+  }
+
+  function toggleFav(id){ var r=find(id); if(r){ r.fav=!r.fav; save(); renderList(); setFavIcon(); } }
+
+  function show(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
+  function hide(id){ $("#"+id).classList.remove("open"); if(!document.querySelector(".view.open")) document.body.style.overflow=""; }
+
+  function openMenu(){
+    var n=state.recipes.length, f=state.recipes.filter(function(r){return r.fav;}).length;
+    $("#menuStats").textContent=n+" recipe"+(n===1?"":"s")+" · "+f+" favorite"+(f===1?"":"s")+" · saved on this device";
+    $("#backdrop").classList.add("open"); $("#menu").classList.add("open");
+  }
+  function closeMenu(){ $("#backdrop").classList.remove("open"); $("#menu").classList.remove("open"); }
+  function exportRecipes(){
+    var blob=new Blob([JSON.stringify(state.recipes,null,2)],{type:"application/json"});
+    var url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download="carboy-recipes-"+new Date().toISOString().slice(0,10)+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1000); closeMenu(); toast("Backup downloaded");
+  }
+  function importRecipes(file){
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var arr=JSON.parse(reader.result); if(!Array.isArray(arr)) throw 0;
+        var existing={}; state.recipes.forEach(function(r){existing[r.id]=1;});
+        var added=0;
+        arr.forEach(function(r){ if(!r||!r.name) return; if(!r.id||existing[r.id]) r.id=uid(); state.recipes.push(r); added++; });
+        save(); renderList(); closeMenu(); toast("Added "+added+" recipe"+(added===1?"":"s"));
+      }catch(e){ toast("That file didn't look like a backup"); }
+    };
+    reader.readAsText(file);
+  }
+
+  document.addEventListener("click", function(e){
+    var t, r=find(state.current);
+    if((t=e.target.closest("[data-fav-toggle]"))){ e.stopPropagation(); toggleFav(t.getAttribute("data-fav-toggle")); return; }
+    if((t=e.target.closest("[data-open]"))){ openDetail(t.getAttribute("data-open")); return; }
+    if((t=e.target.closest("[data-close]"))){ hide(t.getAttribute("data-close")); return; }
+    if((t=e.target.closest("[data-cat]"))){ state.filter=t.getAttribute("data-cat"); state.favOnly=false; renderList(); return; }
+    if((t=e.target.closest("[data-fav='1'].chip"))){ state.favOnly=!state.favOnly; renderList(); return; }
+    if((t=e.target.closest("[data-pick]"))){ renderCatPicker(t.getAttribute("data-pick")); return; }
+    if(e.target.closest("#batMinus")){ var step=(r&&r.unit==="gal")?0.5:1; setWork(state.workBatch-step, r); return; }
+    if(e.target.closest("#batPlus")){ var st=(r&&r.unit==="gal")?0.5:1; setWork(state.workBatch+st, r); return; }
+    if((t=e.target.closest("[data-preset]"))){ setWork(parseFloat(t.getAttribute("data-preset")), r); return; }
+    if((t=e.target.closest(".cook-step"))){ t.dataset.done = t.dataset.done==="1"?"0":"1"; return; }
+    if((t=e.target.closest(".cook-ing li"))){ t.dataset.done = t.dataset.done==="1"?"0":"1"; return; }
+  });
+
+  $("#search").addEventListener("input", function(e){ state.q=e.target.value; renderList(); });
+  $("#addBtn").addEventListener("click", function(){ openForm(null); });
+  $("#menuBtn").addEventListener("click", openMenu);
+  $("#backdrop").addEventListener("click", closeMenu);
+  $("#dEdit").addEventListener("click", function(){ openForm(state.current); });
+  $("#dFav").addEventListener("click", function(){ toggleFav(state.current); });
+  $("#fSave").addEventListener("click", saveForm);
+  $("#fDelete").addEventListener("click", function(){
+    if(!editingId) return;
+    if(confirm("Delete this recipe? This can't be undone.")){
+      state.recipes=state.recipes.filter(function(r){return r.id!==editingId;});
+      save(); renderList(); hide("form"); hide("detail"); toast("Recipe deleted");
+    }
+  });
+  $("#fPhotoBtn").addEventListener("click", function(){ $("#fPhoto").click(); });
+  $("#fPhotoClear").addEventListener("click", function(){ formPhoto=""; updatePhotoPrev(); });
+  $("#fPhoto").addEventListener("change", function(e){
+    var file=e.target.files[0]; if(!file) return;
+    var img=new Image(), url=URL.createObjectURL(file);
+    img.onload=function(){
+      var max=900, sc=Math.min(1,max/Math.max(img.width,img.height)), cv=document.createElement("canvas");
+      cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      formPhoto=cv.toDataURL("image/jpeg",0.78); URL.revokeObjectURL(url); updatePhotoPrev();
+    };
+    img.src=url;
+  });
+  $("#exportBtn").addEventListener("click", exportRecipes);
+  $("#importBtn").addEventListener("click", function(){ $("#importFile").click(); });
+  $("#importFile").addEventListener("change", function(e){ if(e.target.files[0]) importRecipes(e.target.files[0]); e.target.value=""; });
+  window.addEventListener("popstate", function(){ var v=document.querySelector(".view.open"); if(v) hide(v.id); });
+
+  renderList();
+})();
+</script>
+</body>
+</html>
